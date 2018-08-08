@@ -12,8 +12,6 @@ import android.view.animation.LinearInterpolator;
 
 import com.littlezan.demo.R;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * ClassName: BaseCountDownCircleProgressView
  * Description:
@@ -23,6 +21,13 @@ import java.util.concurrent.TimeUnit;
  * @since 2018-08-01  09:20
  */
 public abstract class BaseCountDownCircleProgressView extends View {
+
+    private static final String TAG = "BaseCountDownCircleProg";
+
+    /**
+     * 回调时间间隔毫秒
+     */
+    private static final int TICK_INTERVAL_IN_MILLIS = 200;
 
     @ColorInt
     protected int finishedStrokeColor;
@@ -41,7 +46,8 @@ public abstract class BaseCountDownCircleProgressView extends View {
      */
     private long countDownMillisInFuture;
     private OnCountDownListener listener;
-    private long onTickCount;
+    private long onTickCount = 0;
+    private ObjectAnimator animator;
 
     public BaseCountDownCircleProgressView(Context context) {
         super(context);
@@ -96,10 +102,10 @@ public abstract class BaseCountDownCircleProgressView extends View {
                 listener.onFinish();
                 onTickCount = 0;
             } else {
-                long currentTimeInMillis = Math.round(countDownMillisInFuture * getProgress() / getMax());
-                if (TimeUnit.MILLISECONDS.toSeconds(currentTimeInMillis) > onTickCount) {
-                    listener.onOneSecondTick(Math.round(countDownMillisInFuture * (getMax() - getProgress()) / getMax()));
-                    onTickCount++;
+                int millisUntilFinished = Math.round(countDownMillisInFuture * (getMax() - getProgress()) / getMax());
+                if (countDownMillisInFuture - millisUntilFinished > onTickCount) {
+                    listener.onTick(millisUntilFinished);
+                    onTickCount = +TICK_INTERVAL_IN_MILLIS;
                 }
             }
         }
@@ -117,15 +123,31 @@ public abstract class BaseCountDownCircleProgressView extends View {
         }
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (animator != null) {
+            animator.cancel();
+        }
+    }
 
     public void startCountDown(long millisInFuture, OnCountDownListener listener) {
         this.countDownMillisInFuture = millisInFuture;
         this.listener = listener;
         onTickCount = 0;
-        ObjectAnimator animator = ObjectAnimator.ofFloat(this, "progress", 0, getMax());
+        if (animator != null) {
+            animator.cancel();
+        }
+        animator = ObjectAnimator.ofFloat(this, "progress", 0, getMax());
         animator.setInterpolator(new LinearInterpolator());
         animator.setDuration(millisInFuture);
         animator.start();
+    }
+
+    public void stopCountDown() {
+        if (animator != null) {
+            animator.cancel();
+        }
     }
 
     public interface OnCountDownListener {
@@ -134,7 +156,7 @@ public abstract class BaseCountDownCircleProgressView extends View {
          *
          * @param millisUntilFinished millisUntilFinished
          */
-        void onOneSecondTick(long millisUntilFinished);
+        void onTick(long millisUntilFinished);
 
         /**
          * 完成倒计时

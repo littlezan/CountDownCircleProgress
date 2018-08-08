@@ -2,6 +2,8 @@ package com.littlezan.demo;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.littlezan.demo.countdowncircleprogress.BaseCountDownCircleProgressView;
@@ -12,11 +14,15 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    static final int TIME_DOWN = 1;
+
     /**
      * Hello World!
      */
     private CountDownCircleProgressView countDownCircleProgressView;
     private TextView tvTime;
+    private Button btnStart;
+    private Button btnStop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,10 +33,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         tvTime = findViewById(R.id.tvTime);
+        btnStart = findViewById(R.id.btnStart);
+        btnStop = findViewById(R.id.btnStop);
         countDownCircleProgressView = findViewById(R.id.countDownCircleProgressView);
-        countDownCircleProgressView.startCountDown(TimeUnit.MINUTES.toMillis(3), new BaseCountDownCircleProgressView.OnCountDownListener() {
+        tvTime.setText(formatDuration(TimeUnit.MINUTES.toSeconds(TIME_DOWN)));
+        btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onOneSecondTick(long millisUntilFinished) {
+            public void onClick(View v) {
+                startCountDown();
+            }
+        });
+        btnStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                countDownCircleProgressView.stopCountDown();
+            }
+        });
+    }
+
+    private void startCountDown() {
+        tvTime.setText(formatDuration(TimeUnit.MINUTES.toSeconds(TIME_DOWN)));
+        countDownCircleProgressView.startCountDown(TimeUnit.MINUTES.toMillis(TIME_DOWN), new BaseCountDownCircleProgressView.OnCountDownListener() {
+            @Override
+            public void onTick(long millisUntilFinished) {
                 tvTime.setText(formatDuration(TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished)));
             }
 

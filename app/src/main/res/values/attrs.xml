@@ -12,6 +12,7 @@
         <attr name="donut_unfinished_stroke_width" format="dimension"/>
 
         <attr name="donut_background_color" format="color"/>
+
         <attr name="donut_circle_starting_degree" format="integer" />
 
     </declare-styleable>
